@@ -23,6 +23,11 @@ else
 
   #ip adresse der Domain
   IP=`dig +short $DOMAIN | head -1`
+
+  if [[ -z "$IP" ]] ;then
+    echo "no IP or Hostname found for >$1<"
+    exit;
+  fi
   echo $IP
 
   #Host der Domain
