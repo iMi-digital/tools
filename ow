@@ -7,19 +7,10 @@ else
 
   #befehl der übertragen wird bei der ssh verbindung
   CMD="vhost=\$(apache2ctl -S 2>&1|grep -i $DOMAIN|sed 's/.*(//g'|sed 's/:.*//g') ;
-       if [[ -z \$vhost ]] ;
-         then
-         bash ;
-       else
-         droot=\$(cat \$vhost|grep -i DocumentRoot|awk '{print \$2}') ;
-         if [[ -z \$droot ]] ;
-           then
-           bash;
-         else
-           cd \$droot &&
-           bash ;
-         fi
-       fi"
+       droot=\$(cat \$vhost|grep -i DocumentRoot|awk '{print \$2}') ;
+       cd \$droot;
+       bash
+       "
 
   #ip adresse der Domain
   IP=`dig +short $DOMAIN | head -1`
