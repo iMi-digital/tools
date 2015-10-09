@@ -6,12 +6,22 @@ else
   DOMAIN=$1
 
   #befehl der übertragen wird bei der ssh verbindung
-  CMD="vhost=\$(apache2ctl -S 2>&1|grep -i $DOMAIN|sed 's/.*(//g'|sed 's/:.*//g') ;
+  SSHRC_CMD="vhost=\$(apache2ctl -S 2>&1|grep -i $DOMAIN|sed 's/.*(//g'|sed 's/:.*//g') ;
        droot=\$(cat \$vhost|grep -i DocumentRoot|awk '{print \$2}') ;
        cd \$droot;
-       bash
        "
-
+  SSH_CMD="vhost=\$(apache2ctl -S 2>&1|grep -i $DOMAIN|sed 's/.*(//g'|sed 's/:.*//g') ;
+       if [[ -z \$vhost ]] ;then
+         bash ;
+       else
+         droot=\$(cat \$vhost|grep -i DocumentRoot|awk '{print \$2}') ;
+         if [[ -z \$droot ]] ;then
+           bash;
+         else
+           cd \$droot &&
+           bash ;
+         fi
+       fi"
   #ip adresse der Domain
   IP=`dig +short $DOMAIN | head -1`
   if [[ -z "$IP" ]] ;then
@@ -49,6 +59,12 @@ else
     ssh_or_sshrc
     echo "ssh_or_sshrc = $SSH_FINAL_COMMAND" >> ~/.ow
     echo "SSH_FINAL_COMMAND added to your ow configfile ~/.ow"
+  fi
+
+  if [[ $SSH_FINAL_COMMAND == "sshrc" ]] ;then
+    CMD=$SSHRC_CMD
+  else
+    CMD=$SSH_CMD
   fi
 
   #überprüft ob schon ein eintrag existiert
