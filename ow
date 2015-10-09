@@ -1,0 +1,17 @@
+#!/bin/bash
+if [ "$#" -eq 0 ]
+  then
+    echo "PARAMETER fehlt z.B: www.google.de"
+else
+  DOMAIN=$1
+  IP=$(dig +short $DOMAIN | head -1)
+
+  echo $IP
+  echo $(dig -x $IP +short|sed 's/.$//g')
+
+  echo "Username für ssh verbindung"
+  read USERSSH
+
+  ssh $USERSSH@$IP -t "vhost=\$(apache2ctl -S 2>&1|grep $DOMAIN|sed 's/.*(//g'|sed 's/:.*//g') && droot=\$(cat \$vhost|grep DocumentRoot|awk '{print \$2}') && cd \$droot && bash"
+
+fi
