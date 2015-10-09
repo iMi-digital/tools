@@ -33,9 +33,6 @@ else
   DOMAIN_HOST_NAME=`dig -x $IP +short|sed 's/.$//g'`
   echo $DOMAIN_HOST_NAME
 
-  check_exist_owconfig=$(cat ~/.ow|grep -i ssh_or_sshrc|awk '{print $3}')
-
-
   #funktion der abfrage ob ssh oder sshrc genutz werden soll
   function ssh_or_sshrc {
     echo "Do you want to connect via ssh or sshrc ? [ssh]"
@@ -52,27 +49,28 @@ else
     fi
   }
 
-  if [[ -z "$check_exist_owconfig" ]] || [[ ! -f ~/.ow ]] ;then
+  if [[ -f ~/.ow ]] && [[ ! -z $(grep -i "ssh_or_sshrc" ~/.ow|awk '{print $3}') ]] ;then
+    SSH_OR_SSHRC_OWCONFIG=$(grep -i "ssh_or_sshrc" ~/.ow|awk '{print $3}')
+    echo "Found ~/.ow configfile - ssh_or_sshrc = $SSH_OR_SSHRC_OWCONFIG"
+    SSH_FINAL_COMMAND=$SSH_OR_SSHRC_OWCONFIG
+  else
     #führt die funktion ssh_or_sshrc aus
     ssh_or_sshrc
     echo "ssh_or_sshrc = $SSH_FINAL_COMMAND" >> ~/.ow
     echo "SSH_FINAL_COMMAND added to your ow configfile ~/.ow"
-  else
-    echo "Found ~/.ow configfile - ssh_or_sshrc = $check_exist_owconfig"
-    SSH_FINAL_COMMAND=$check_exist_owconfig
   fi
 
   #überprüft ob schon ein eintrag existiert
-  check_exist_domain=`cat ~/.ssh/config|grep "^Host $DOMAIN_HOST_NAME" -i |wc -l`
-  check_exist_ip=`cat ~/.ssh/config|grep $IP|wc -l`
+  CHECK_EXIST_DOMAIN=`cat ~/.ssh/config|grep "^Host $DOMAIN_HOST_NAME" -i |wc -l`
+  CHECK_EXIST_IP=`cat ~/.ssh/config|grep $IP|wc -l`
 
   #checkt über Domainname
-  if [[ $check_exist_domain -ge 1 ]] ;then
+  if [[ $CHECK_EXIST_DOMAIN -ge 1 ]] ;then
     $SSH_FINAL_COMMAND $DOMAIN_HOST_NAME -t $CMD
     exit;
 
   #checkt über IP-Addresse
-  elif [[ $check_exist_ip -ge 1 ]] ;then
+  elif [[ $CHECK_EXIST_IP -ge 1 ]] ;then
     $SSH_FINAL_COMMAND $IP -t $CMD
     exit;
 
