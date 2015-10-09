@@ -1,17 +1,93 @@
 #!/bin/bash
-if [ "$#" -eq 0 ]
-  then
-    echo "PARAMETER fehlt z.B: www.google.de"
+if [ "$#" -eq 0 ] ;then
+    echo "Usage: openweb.sh www.google.com"
 else
+  #Domänename
   DOMAIN=$1
-  IP=$(dig +short $DOMAIN | head -1)
 
+  #befehl der übertragen wird bei der ssh verbindung
+  CMD="vhost=\$(apache2ctl -S 2>&1|grep -i $DOMAIN|sed 's/.*(//g'|sed 's/:.*//g') ;
+       if [[ -z \$vhost ]] ;
+         then
+         bash ;
+       else
+         droot=\$(cat \$vhost|grep -i DocumentRoot|awk '{print \$2}') ;
+         if [[ -z \$droot ]] ;
+           then
+           bash;
+         else
+           cd \$droot &&
+           bash ;
+         fi
+       fi"
+
+  #ip adresse der Domain
+  IP=`dig +short $DOMAIN | head -1`
   echo $IP
-  echo $(dig -x $IP +short|sed 's/.$//g')
 
-  echo "Username für ssh verbindung"
-  read USERSSH
+  #Host der Domain
+  DOMAIN_HOST_NAME=`dig -x $IP +short|sed 's/.$//g'`
+  echo $DOMAIN_HOST_NAME
 
-  ssh $USERSSH@$IP -t "vhost=\$(apache2ctl -S 2>&1|grep $DOMAIN|sed 's/.*(//g'|sed 's/:.*//g') && droot=\$(cat \$vhost|grep DocumentRoot|awk '{print \$2}') && cd \$droot && bash"
+  #überprüft ob schon ein eintrag existiert
+  check_exist_domain=`cat ~/.ssh/config|grep "^Host $DOMAIN_HOST_NAME" -i |wc -l`
+  check_exist_ip=`cat ~/.ssh/config|grep $IP|wc -l`
 
+  #checkt über Domainname
+  if [[ $check_exist_domain -ge 1 ]] ;then
+    ssh $DOMAIN_HOST_NAME -t $CMD
+    ssh $DOMAIN_HOST_NAME -t "bash"
+
+  #checkt über IP-Addresse
+  elif [[ $check_exist_ip -ge 1 ]] ;then
+    ssh $IP -t $CMD
+    ssh $IP -t "bash"
+
+  else
+    #username speichern
+    WHOAMI=`whoami`
+
+    echo "No entry found in ~/.ssh/config"
+    echo "Enter SSH username please: [$WHOAMI]"
+    read USERSSH
+
+    #kontrolliert ob vorher bei USERSSH was eingetragen wurde oder nicht
+    if [[ -z "$USERSSH" ]] ;then
+      USERSSH=$WHOAMI
+    fi
+
+    echo "Do you want to import >$USERSSH< in ~/.ssh/config ? [Y/N]"
+    read ENTRY
+
+    #speicher abfrage der ssh verbindung
+    if [[ $ENTRY = y ]] || [[ $ENTRY = Y ]] ;then
+      /bin/cat <<EOF >> ~/.ssh/config
+
+Host $DOMAIN_HOST_NAME
+User $USERSSH
+EOF
+      echo "import successful"
+    else
+      echo "not imported"
+    fi
+
+    #funktion der abfrage ob ssh oder sshrc genutz werden soll
+    function ssh_or_sshrc {
+      echo "Do you want to connect via ssh or sshrc ? [ssh]"
+      read SSH_FINAL_COMMAND
+
+      #überprüft ob in SSH_FINAL_COMMAND was steht
+      if [[ -z "$SSH_FINAL_COMMAND" ]] ;then
+        SSH_FINAL_COMMAND=ssh
+
+    #überprüft ob ssh oder sshrc eingegeben worden ist, falls man sich hier vertippt wird die function ssh_or_sshrc wieder abgerufen
+    elif [[ "$SSH_FINAL_COMMAND" != "ssh" ]] && [[ "$SSH_FINAL_COMMAND" != "sshrc" ]] ;then
+        echo "mistyped try again"
+        ssh_or_sshrc
+      fi
+    }
+    #führ die funktion ssh_or_sshrc aus
+    ssh_or_sshrc
+    $SSH_FINAL_COMMAND $USERSSH@$IP -t $CMD
+  fi
 fi
