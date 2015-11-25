@@ -6,11 +6,11 @@ else
   DOMAIN=$1
 
   #befehl der übertragen wird bei der ssh verbindung
-  SSHRC_CMD="vhost=\$(apache2ctl -S 2>&1|grep -i $DOMAIN|sed 's/.*(//g'|sed 's/:.*//g') ;
+  SSHRC_CMD="vhost=\$(apache2ctl -S 2>&1|grep -i ' $DOMAIN'|sed 's/.*(//g'|sed 's/:.*//g') ;
        droot=\$(cat \$vhost|grep -i DocumentRoot|awk '{print \$2}') ;
        cd \$droot;
        "
-  SSH_CMD="vhost=\$(apache2ctl -S 2>&1|grep -i $DOMAIN|sed 's/.*(//g'|sed 's/:.*//g') ;
+  SSH_CMD="vhost=\$(apache2ctl -S 2>&1|grep -i ' $DOMAIN'|sed 's/.*(//g'|sed 's/:.*//g') ;
        if [[ -z \$vhost ]] ;then
          bash ;
        else
@@ -22,12 +22,13 @@ else
            bash ;
          fi
        fi"
-  #ip adresse der Domain
-  IP=`dig +short $DOMAIN | head -1`
-  if [[ -z "$IP" ]] ;then
-    echo "no IP or Hostname found for >$1<"
-    exit;
+  #prüft ob eine ip adresse existiert
+  if [[ $(nslookup $DOMAIN|grep "Address:"|wc -l) = 1 ]] ;then
+     echo "no IP or Hostname found for >$1<"
+     exit;
   fi
+  #ip adresse der Domain
+  IP=`nslookup $DOMAIN|grep "Address:"|tail -1|awk '{print $2}'`
   echo $IP
 
   #Host der Domain
@@ -68,6 +69,7 @@ else
   fi
 
   #überprüft ob schon ein eintrag existiert
+  touch ~/.ssh/config
   CHECK_EXIST_DOMAIN=`cat ~/.ssh/config|grep "^Host $DOMAIN_HOST_NAME" -i |wc -l`
   CHECK_EXIST_IP=`cat ~/.ssh/config|grep $IP|wc -l`
 
