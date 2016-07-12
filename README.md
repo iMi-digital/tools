@@ -13,4 +13,4 @@ OpenWeb works only with apache2
 ```
 ow www.google.com
 ```
-![](https://tracker.imi.de/attachments/download/14299?t=1468335410&version=true)
+![Demo](https://raw.githubusercontent.com/iMi-digital/tools/master/doc/ow-demo.gif)
