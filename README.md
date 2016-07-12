@@ -9,6 +9,8 @@ Here one has the choice whether one ssh or sshrc would like to use and also the 
 As soon as all important data is given the connection to the server is erstablished.
 Here the real function of the script appears, because the script automatically searches for the given domain and opens the right Documentroot and passes the control of the shell to the user.
 
+The user for the login can be automatically added to `.ssh/config`.
+
 OpenWeb works only with apache2.
 
 The server is determined via DNS - if the domain is behind a proxy, the script is currently not working.
