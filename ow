@@ -4,9 +4,9 @@ if [ "$#" -eq 0 ] ;then
 else
   #Domänename
   DOMAIN=$1
-set -x
+  
   #befehl der übertragen wird bei der ssh verbindung
- SSHRC_CMD="vhost=\$(grep -v '#' /etc/apache2/sites-enabled/*|egrep -i ' $DOMAIN$| $DOMAIN '|awk '{print \$1}'| sed s'/.$//') ;       
+  SSHRC_CMD="vhost=\$(grep -v '#' /etc/apache2/sites-enabled/*|egrep -i ' $DOMAIN$| $DOMAIN '|awk '{print \$1}'| sed s'/.$//') ;       
 	droot=\$(cat \$vhost|grep -i DocumentRoot|awk '{print \$2}') ;
        cd \$droot;
        "
