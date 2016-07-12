@@ -11,6 +11,10 @@ Here the real function of the script appears, because the script automatically s
 
 OpenWeb works only with apache2.
 
+The server is determined via DNS - if the domain is behind a proxy, the script is currently not working.
+
+Pull requests are welcome.
+
 ### Usage
 ```
 ow www.google.com
