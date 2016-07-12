@@ -4,13 +4,13 @@ if [ "$#" -eq 0 ] ;then
 else
   #Domänename
   DOMAIN=$1
-
+set -x
   #befehl der übertragen wird bei der ssh verbindung
-  SSHRC_CMD="vhost=\$(apache2ctl -S 2>&1|grep -i ' $DOMAIN'|sed 's/.*(//g'|sed 's/:.*//g') ;
-       droot=\$(cat \$vhost|grep -i DocumentRoot|awk '{print \$2}') ;
+ SSHRC_CMD="vhost=\$(grep -v '#' /etc/apache2/sites-enabled/*|egrep -i ' $DOMAIN$| $DOMAIN '|awk '{print \$1}'| sed s'/.$//') ;       
+	droot=\$(cat \$vhost|grep -i DocumentRoot|awk '{print \$2}') ;
        cd \$droot;
        "
-  SSH_CMD="vhost=\$(apache2ctl -S 2>&1|grep -i ' $DOMAIN'|sed 's/.*(//g'|sed 's/:.*//g') ;
+  SSH_CMD="vhost=\$(grep -v '#' /etc/apache2/sites-enabled/*|egrep -i ' $DOMAIN$| $DOMAIN '|awk '{print \$1}'| sed s'/.$//') ;
        if [[ -z \$vhost ]] ;then
          bash ;
        else
@@ -102,7 +102,6 @@ else
     #speicher abfrage der ssh verbindung
     if [[ $ENTRY = y ]] || [[ $ENTRY = Y ]] ;then
       /bin/cat <<EOF >> ~/.ssh/config
-
 Host $DOMAIN_HOST_NAME
 User $USERSSH
 EOF
